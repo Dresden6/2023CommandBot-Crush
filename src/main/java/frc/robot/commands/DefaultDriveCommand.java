@@ -1,17 +1,16 @@
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.DriveSubsystem;
 
 public class DefaultDriveCommand extends CommandBase {
     
-  final Joystick joystick;
+  final XboxController controller;
   final DriveSubsystem driveSubsystem;
 
-  public DefaultDriveCommand(Joystick joystick, DriveSubsystem driveSubsystem) {
-    this.joystick = joystick;
+  public DefaultDriveCommand(XboxController controller, DriveSubsystem driveSubsystem) {
+    this.controller = controller;
     this.driveSubsystem = driveSubsystem;
     this.addRequirements(driveSubsystem);
   }
@@ -35,9 +34,10 @@ public class DefaultDriveCommand extends CommandBase {
     double rightSpeed = (forw - turn);
 
     */
-    double left = joystick.getRawAxis(XboxController.Axis.kRightY.value);
-    double right = joystick.getRawAxis(XboxController.Axis.kLeftY.value);
+    double fwd = controller.getLeftY();
+    double rot = controller.getRightX();
 
-    driveSubsystem.drive(left, right);
+    driveSubsystem.arcadeDrive(fwd, rot);
+
   }
 }

@@ -2,21 +2,20 @@ package frc.robot.subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.REVPhysicsSim;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
-import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
+import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
-import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj.simulation.EncoderSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -29,15 +28,12 @@ public class DriveSubsystem extends SubsystemBase {
     double WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER * Math.PI;
     double WHEEL_GEAR_RATIO = .75;
 
-    DifferentialDriveOdometry odometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(0), 0, 0);
-
-    CANSparkMax motorFrontLeft;
-    CANSparkMax motorFrontRight;
-    CANSparkMax motorRearLeft;
-    CANSparkMax motorRearRight;
+    DifferentialDriveOdometry odometry;
   
     Gyro gyro;
 
+    MotorControllerGroup motorControllerGroupLeft;
+    MotorControllerGroup motorControllerGroupRight;
     DifferentialDrive diffDrive;
 
     Field2d field = new Field2d();
@@ -52,23 +48,23 @@ public class DriveSubsystem extends SubsystemBase {
 
 
     public void init() {
-        motorFrontLeft = new CANSparkMax(1, MotorType.kBrushless);
-        motorFrontRight = new CANSparkMax(2, MotorType.kBrushless);
-        motorRearLeft = new CANSparkMax(3, MotorType.kBrushless);
-        motorRearRight = new CANSparkMax(4, MotorType.kBrushless);
+        // TODO: renumber these motor controllers with the correct ID's
 
-        motorFrontLeft.getEncoder().setPositionConversionFactor(WHEEL_GEAR_RATIO);
-        motorFrontRight.getEncoder().setPositionConversionFactor(WHEEL_GEAR_RATIO);
-        motorRearLeft.getEncoder().setPositionConversionFactor(WHEEL_GEAR_RATIO);
-        motorRearRight.getEncoder().setPositionConversionFactor(WHEEL_GEAR_RATIO);
+        motorControllerGroupLeft = new MotorControllerGroup(
+            new CANSparkMax(1, MotorType.kBrushless),
+            new CANSparkMax(3, MotorType.kBrushless),
+            new CANSparkMax(5, MotorType.kBrushless));
+        
+        motorControllerGroupRight = new MotorControllerGroup(
+            new CANSparkMax(2, MotorType.kBrushless),
+            new CANSparkMax(4, MotorType.kBrushless),
+            new CANSparkMax(6, MotorType.kBrushless));
+        
+        motorControllerGroupRight.setInverted(true);
 
-        motorRearLeft.follow(motorFrontLeft);
-        motorRearRight.follow(motorFrontRight);
+        diffDrive = new DifferentialDrive(motorControllerGroupRight, motorControllerGroupLeft);
 
-        motorFrontRight.setInverted(true);
-        motorRearRight.setInverted(true);
-
-        gyro = new AHRS(SPI.Port.kMXP, (byte)200);
+        gyro = new AHRS(SPI.Port.kMXP);
 
         leftEncoder = new Encoder(
             DriveConstants.kLeftEncoderPorts[0],
@@ -83,7 +79,9 @@ public class DriveSubsystem extends SubsystemBase {
         leftEncoder.setDistancePerPulse(DriveConstants.kEncoderDistancePerPulse);
         rightEncoder.setDistancePerPulse(DriveConstants.kEncoderDistancePerPulse);
 
-        diffDrive = new DifferentialDrive(motorFrontLeft, motorFrontRight);
+        resetEncoders();
+
+        odometry = new DifferentialDriveOdometry(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
 
         if (Robot.isSimulation()) {
             diffDriveSim = new DifferentialDrivetrainSim(
@@ -114,22 +112,25 @@ public class DriveSubsystem extends SubsystemBase {
     public void periodic() {
         odometry.update(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
         field.setRobotPose(odometry.getPoseMeters());
-        super.periodic();
-    }
 
-    
+        // TANK DRIVE CODE 
+        /*
+         * motorFrontLeft.set(ControlMode.PercentOutput, leftY);
+         * motorFrontRight.set(ControlMode.PercentOutput, rightY);
+         */
+    }
 
     @Override
     public void simulationPeriodic() {
-        var left = motorFrontLeft.get();
-        var right = motorFrontRight.get();
+        var left = motorControllerGroupLeft.get();
+        var right = motorControllerGroupRight.get();
 
-        SmartDashboard.putNumber("left", motorFrontLeft.get() * RobotController.getBatteryVoltage());
-        SmartDashboard.putNumber("right", motorFrontRight.get() * RobotController.getBatteryVoltage());
+        SmartDashboard.putNumber("left", left * RobotController.getBatteryVoltage());
+        SmartDashboard.putNumber("right", right * RobotController.getBatteryVoltage());
 
         diffDriveSim.setInputs(
-            motorFrontLeft.get() * RobotController.getBatteryVoltage(), 
-            motorFrontRight.get() * RobotController.getBatteryVoltage());
+            left * RobotController.getBatteryVoltage(), 
+            right * RobotController.getBatteryVoltage());
         
         
         diffDriveSim.update(0.020);
@@ -145,5 +146,63 @@ public class DriveSubsystem extends SubsystemBase {
     public void drive(double leftOutput, double rightOutput) {
         diffDrive.tankDrive(leftOutput, rightOutput);
     }
+
+    public void resetEncoders()
+    {
+        leftEncoder.reset();
+        rightEncoder.reset();
+    }
+
+    public Pose2d getPose()
+    {
+        return odometry.getPoseMeters();
+    }
+
+    public DifferentialDriveWheelSpeeds getWheelSpeeds()
+    {
+        return new DifferentialDriveWheelSpeeds(leftEncoder.getRate(), rightEncoder.getRate());
+    }
+
+    public void resetOdometry(Pose2d pose)
+    {
+        resetEncoders();
+        odometry.resetPosition(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance(), pose);
+    }
     
+    public void arcadeDrive(double fwd, double rot)
+    {
+        diffDrive.arcadeDrive(fwd, rot);
+    }
+
+    public void tankDriveVolts(double left, double right)
+    {
+        motorControllerGroupLeft.setVoltage(left);
+        motorControllerGroupRight.setVoltage(right);
+        diffDrive.feed();
+    }
+
+    public double getAverageEncoderDistance()
+    {
+        return (leftEncoder.getDistance() + rightEncoder.getDistance()) / 2.0;
+    }
+
+    public void setMaxOutput(double maxOutput)
+    {
+        diffDrive.setMaxOutput(maxOutput);
+    }
+
+    public void zeroHeading()
+    {
+        gyro.reset();
+    }
+
+    public double getHeading()
+    {
+        return gyro.getRotation2d().getDegrees();
+    }
+
+    public double getTurnRate()
+    {
+        return -gyro.getRate();
+    }
 }

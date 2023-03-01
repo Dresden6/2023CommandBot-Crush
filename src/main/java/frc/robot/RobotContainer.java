@@ -34,7 +34,7 @@ public class RobotContainer {
   public RobotContainer() {
     driveSubsystem.init();
 
-    // driveSubsystem.register();
+    driveSubsystem.register();
     driveSubsystem.setDefaultCommand(new DefaultDriveCommand(driverJoystick, driveSubsystem));
 
     // Configure the trigger bindings
