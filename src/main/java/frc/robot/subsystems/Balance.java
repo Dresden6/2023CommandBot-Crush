@@ -13,6 +13,10 @@ public class Balance extends DriveSubsystem{
      * 
      * if the roll value is outside of that range, it will stop
      */
+
+     /* 
+     
+    /*
     if(roll > 5 || roll < -5)
     {
       if(roll > 5)
@@ -31,5 +35,6 @@ public class Balance extends DriveSubsystem{
         motorFrontLeft.set(ControlMode.PercentOutput, 0);
       motorFrontRight.set(ControlMode.PercentOutput, 0);
     }
+ */
 }
 

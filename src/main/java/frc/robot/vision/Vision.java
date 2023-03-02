@@ -14,7 +14,6 @@ public PhotonCamera getCamera() {
       this.camera = camera;
     }
 
-}
 
 
 private void targetDrive(){
@@ -33,6 +32,8 @@ private void targetDrive(){
 
       double area = target.getArea();
       SmartDashboard.putNumber("targetArea", area);
+
+      /* 
      if(area < 5){
         motorFrontLeft.set(ControlMode.PercentOutput, -0.2);
         motorFrontRight.set(ControlMode.PercentOutput, 0.2);
@@ -42,6 +43,7 @@ private void targetDrive(){
         motorFrontLeft.set(ControlMode.PercentOutput, 0);
         motorFrontRight.set(ControlMode.PercentOutput, 0);
       }
-
-
+*/
     }
+  }
+}

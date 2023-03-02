@@ -20,7 +20,8 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
  */
 public final class Constants {
   public static class OperatorConstants {
-    public static final int kDriverControllerPort = 0;
+    public static final int kDriverControllerPort = 0; 
+    public static final int kArmControllerPort = 1;
   }
   public static final class DriveConstants {
     public static final int kLeftMotor1Port = 0;
@@ -74,10 +75,6 @@ public final class Constants {
 
     // Example value only - as above, this must be tuned for your drive!
     public static final double kPDriveVel = 8.5;
-  }
-
-  public static final class OIConstants {
-    public static final int kDriverControllerPort = 0;
   }
 
   public static final class AutoConstants {
