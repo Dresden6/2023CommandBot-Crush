@@ -24,7 +24,7 @@ import frc.robot.Robot;
 import frc.robot.Constants.DriveConstants;
 
 public class DriveSubsystem extends SubsystemBase {
-    double WHEEL_DIAMETER = Units.inchesToMeters(4); // 4 inches
+    double WHEEL_DIAMETER = Units.inchesToMeters(5); // 4 inches
     double WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER * Math.PI;
     double WHEEL_GEAR_RATIO = .75;
 
@@ -41,6 +41,9 @@ public class DriveSubsystem extends SubsystemBase {
     Encoder leftEncoder;
     Encoder rightEncoder;
 
+    CANSparkMax leftLeader;
+    CANSparkMax rightLeader;
+
     // Simulation specific items 
     DifferentialDrivetrainSim diffDriveSim;
     EncoderSim leftEncoderSim;
@@ -49,17 +52,20 @@ public class DriveSubsystem extends SubsystemBase {
 
     public void init() {
         // TODO: renumber these motor controllers with the correct ID's
-
+        leftLeader = new CANSparkMax(1, MotorType.kBrushless);
         motorControllerGroupLeft = new MotorControllerGroup(
-            new CANSparkMax(1, MotorType.kBrushless),
+        leftLeader,
             new CANSparkMax(3, MotorType.kBrushless),
             new CANSparkMax(5, MotorType.kBrushless));
         
+        rightLeader = new CANSparkMax(2, MotorType.kBrushless);
         motorControllerGroupRight = new MotorControllerGroup(
-            new CANSparkMax(2, MotorType.kBrushless),
+            rightLeader,
             new CANSparkMax(4, MotorType.kBrushless),
             new CANSparkMax(6, MotorType.kBrushless));
-        
+            leftLeader.getEncoder().setPosition(0);
+            rightLeader.getEncoder().setPosition(0);
+
         motorControllerGroupRight.setInverted(true);
 
         diffDrive = new DifferentialDrive(motorControllerGroupRight, motorControllerGroupLeft);
@@ -82,7 +88,10 @@ public class DriveSubsystem extends SubsystemBase {
         resetEncoders();
 
         odometry = new DifferentialDriveOdometry(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
+        odometry.update(gyro.getRotation2d(), leftLeader.getEncoder().getPosition(), rightLeader.getEncoder().getPosition());
 
+
+        
         if (Robot.isSimulation()) {
             diffDriveSim = new DifferentialDrivetrainSim(
                 DriveConstants.kDrivetrainPlant,
