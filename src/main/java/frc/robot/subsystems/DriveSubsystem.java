@@ -2,14 +2,17 @@ package frc.robot.subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.REVPhysicsSim;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -20,6 +23,7 @@ import edu.wpi.first.wpilibj.simulation.EncoderSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.Constants.DriveConstants;
 
@@ -38,8 +42,8 @@ public class DriveSubsystem extends SubsystemBase {
 
     Field2d field = new Field2d();
 
-    Encoder leftEncoder;
-    Encoder rightEncoder;
+    RelativeEncoder leftEncoder;
+    RelativeEncoder rightEncoder;
 
     CANSparkMax leftLeader;
     CANSparkMax rightLeader;
@@ -48,6 +52,9 @@ public class DriveSubsystem extends SubsystemBase {
     DifferentialDrivetrainSim diffDriveSim;
     EncoderSim leftEncoderSim;
     EncoderSim rightEncoderSim;
+
+    // Limiter used to limit how fast velocity is allowed to change
+    final SlewRateLimiter limiter = new SlewRateLimiter(0.5);
 
 
     public void init() {
@@ -63,8 +70,6 @@ public class DriveSubsystem extends SubsystemBase {
             rightLeader,
             new CANSparkMax(4, MotorType.kBrushless),
             new CANSparkMax(6, MotorType.kBrushless));
-            leftLeader.getEncoder().setPosition(0);
-            rightLeader.getEncoder().setPosition(0);
 
         motorControllerGroupRight.setInverted(true);
 
@@ -72,25 +77,21 @@ public class DriveSubsystem extends SubsystemBase {
 
         gyro = new AHRS(SPI.Port.kMXP);
 
-        leftEncoder = new Encoder(
-            DriveConstants.kLeftEncoderPorts[0],
-            DriveConstants.kLeftEncoderPorts[1],
-            DriveConstants.kLeftEncoderReversed);
-        
-        rightEncoder = new Encoder(
-            DriveConstants.kRightEncoderPorts[0],
-            DriveConstants.kRightEncoderPorts[1],
-            DriveConstants.kRightEncoderReversed);
+        leftEncoder = leftLeader.getEncoder();
+        rightEncoder = rightLeader.getEncoder();
 
-        leftEncoder.setDistancePerPulse(DriveConstants.kEncoderDistancePerPulse);
-        rightEncoder.setDistancePerPulse(DriveConstants.kEncoderDistancePerPulse);
+        // Set the conversion factor for position using computed distance per pulse
+        leftEncoder.setPositionConversionFactor(Constants.DriveConstants.kEncoderDistancePerPulse);
+        rightEncoder.setPositionConversionFactor(Constants.DriveConstants.kEncoderDistancePerPulse);
 
+        // Set the conversion factor for velocity so that we get meters per second instead of RPMs
+        leftEncoder.setVelocityConversionFactor(Constants.DriveConstants.kEncoderDistancePerPulse);
+        rightEncoder.setVelocityConversionFactor(Constants.DriveConstants.kEncoderDistancePerPulse);
+
+        // Make sure encoders are reset to 0
         resetEncoders();
 
-        //odometry = new DifferentialDriveOdometry(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
-        odometry.update(gyro.getRotation2d(), leftLeader.getEncoder().getPosition(), rightLeader.getEncoder().getPosition());
-
-
+        odometry = new DifferentialDriveOdometry(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition());
         
         if (Robot.isSimulation()) {
             diffDriveSim = new DifferentialDrivetrainSim(
@@ -101,15 +102,19 @@ public class DriveSubsystem extends SubsystemBase {
                 DriveConstants.kWheelDiameterMeters / 2.0,
                 VecBuilder.fill(0, 0, 0.0001, 0.1, 0.1, 0.005, 0.005));
 
-            leftEncoderSim = new EncoderSim(leftEncoder);
-            rightEncoderSim = new EncoderSim(rightEncoder);
                 
             /* 
+            leftEncoderSim = new EncoderSim(leftEncoder);
+            rightEncoderSim = new EncoderSim(rightEncoder);
             REVPhysicsSim.getInstance().addSparkMax(motorFrontLeft, DCMotor.getNEO(1));
             REVPhysicsSim.getInstance().addSparkMax(motorFrontRight, DCMotor.getNEO(1));
             REVPhysicsSim.getInstance().addSparkMax(motorRearLeft, DCMotor.getNEO(1));
             REVPhysicsSim.getInstance().addSparkMax(motorRearRight, DCMotor.getNEO(1));
             */
+
+            REVPhysicsSim.getInstance().addSparkMax(leftLeader, DCMotor.getNEO(3));
+            REVPhysicsSim.getInstance().addSparkMax(rightLeader, DCMotor.getNEO(3));
+
             
             SmartDashboard.putData("Field", field);
 
@@ -119,8 +124,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        //odometry.update(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
-        odometry.update(gyro.getRotation2d(), leftLeader.getEncoder().getPosition(), rightLeader.getEncoder().getPosition());
+        odometry.update(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition());
         field.setRobotPose(odometry.getPoseMeters());
 
         // TANK DRIVE CODE 
@@ -144,12 +148,14 @@ public class DriveSubsystem extends SubsystemBase {
         
         
         diffDriveSim.update(0.020);
-        //REVPhysicsSim.getInstance().run();
 
+        REVPhysicsSim.getInstance().run();
+        /* 
         leftEncoderSim.setDistance(diffDriveSim.getLeftPositionMeters());
         leftEncoderSim.setRate(diffDriveSim.getLeftVelocityMetersPerSecond());
         rightEncoderSim.setDistance(diffDriveSim.getRightPositionMeters());
         rightEncoderSim.setRate(diffDriveSim.getRightVelocityMetersPerSecond());
+        */
         
     }
 
@@ -159,8 +165,8 @@ public class DriveSubsystem extends SubsystemBase {
 
     public void resetEncoders()
     {
-        leftEncoder.reset();
-        rightEncoder.reset();
+        leftEncoder.setPosition(0);
+        rightEncoder.setPosition(0);
     }
 
     public Pose2d getPose()
@@ -170,18 +176,18 @@ public class DriveSubsystem extends SubsystemBase {
 
     public DifferentialDriveWheelSpeeds getWheelSpeeds()
     {
-        return new DifferentialDriveWheelSpeeds(leftEncoder.getRate(), rightEncoder.getRate());
+        return new DifferentialDriveWheelSpeeds(leftEncoder.getVelocity(), rightEncoder.getVelocity());
     }
 
     public void resetOdometry(Pose2d pose)
     {
         resetEncoders();
-        odometry.resetPosition(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance(), pose);
+        odometry.resetPosition(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition(), pose);
     }
     
     public void arcadeDrive(double fwd, double rot)
     {
-        diffDrive.arcadeDrive(fwd, rot);
+        diffDrive.arcadeDrive(limiter.calculate(fwd), rot);
     }
 
     public void tankDriveVolts(double left, double right)
@@ -193,7 +199,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     public double getAverageEncoderDistance()
     {
-        return (leftEncoder.getDistance() + rightEncoder.getDistance()) / 2.0;
+        return (leftEncoder.getPosition() + rightEncoder.getPosition()) / 2.0;
     }
 
     public void setMaxOutput(double maxOutput)

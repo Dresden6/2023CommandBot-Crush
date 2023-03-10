@@ -38,11 +38,11 @@ public final class Constants {
     public static final DifferentialDriveKinematics kDriveKinematics =
         new DifferentialDriveKinematics(kTrackwidthMeters);
 
-    public static final int kEncoderCPR = 1024;
-    public static final double kWheelDiameterMeters = 0.15;
+    public static final double kEncoderCPR = 7.4;
+    public static final double kWheelDiameterMeters = 0.127;
     public static final double kEncoderDistancePerPulse =
         // Assumes the encoders are directly mounted on the wheel shafts
-        (kWheelDiameterMeters * Math.PI) / (double) kEncoderCPR;
+        (kWheelDiameterMeters * Math.PI) / kEncoderCPR;
 
     public static final boolean kGyroReversed = true;
 
