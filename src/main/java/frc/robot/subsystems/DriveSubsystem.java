@@ -87,7 +87,7 @@ public class DriveSubsystem extends SubsystemBase {
 
         resetEncoders();
 
-        odometry = new DifferentialDriveOdometry(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
+        //odometry = new DifferentialDriveOdometry(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
         odometry.update(gyro.getRotation2d(), leftLeader.getEncoder().getPosition(), rightLeader.getEncoder().getPosition());
 
 
@@ -119,7 +119,8 @@ public class DriveSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        odometry.update(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
+        //odometry.update(gyro.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
+        odometry.update(gyro.getRotation2d(), leftLeader.getEncoder().getPosition(), rightLeader.getEncoder().getPosition());
         field.setRobotPose(odometry.getPoseMeters());
 
         // TANK DRIVE CODE 
