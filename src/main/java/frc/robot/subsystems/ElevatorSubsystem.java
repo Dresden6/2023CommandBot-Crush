@@ -32,18 +32,38 @@ public class ElevatorSubsystem extends SubsystemBase {
         encoder.setPositionConversionFactor(1);
     }
 
-    public boolean isAtTop()
+    public boolean isAtTop(int pos)
     {
-        return false;
+        // PLACEHOLDER; we can put a real value here later
+        int top = 1;
+
+        if(pos == top)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
-    public boolean isAtBottom()
+    public boolean isAtBottom(int pos)
     {
-        return false;
+        // PLACEHOLDER; we can put a real value here later
+        int bottom = 0;
+
+        if(pos == bottom)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     public void move(double amt)
     {
-
+        motorGroup.set(amt);
     }
 }
