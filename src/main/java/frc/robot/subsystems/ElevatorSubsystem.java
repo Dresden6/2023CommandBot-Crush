@@ -20,12 +20,12 @@ public class ElevatorSubsystem extends SubsystemBase {
     private RelativeEncoder encoder;
     
     private final double minHeight = 0.0;
-    private final double maxHeight = 2.0; // TODO: Must figure out allowed height in meters
+    private final double maxHeight = 1.143; // This is the highest it can possibly go, about 45 inches. We might want to change this to a smaller value for safety's sake?
 
     public void init()
     {
-        controllerLeft = new CANSparkMax(0, MotorType.kBrushless);
-        controllerRight = new CANSparkMax(1, MotorType.kBrushless);
+        controllerLeft = new CANSparkMax(8, MotorType.kBrushless);
+        controllerRight = new CANSparkMax(9, MotorType.kBrushless);
         controllerRight.setInverted(true);
 
         elevatorDrive = new DifferentialDrive(controllerLeft, controllerRight);
@@ -39,6 +39,11 @@ public class ElevatorSubsystem extends SubsystemBase {
         // We need to set the position conversion factor which says how many meters
         // the elevator moves with one full rotation of the motor. To do this, we must
         // know the gear ratio and the diameter of the gear/wheel driving the elevator.
+        /*
+         * gear ratio: 1:27
+         * gear diameter: 22 teeth / 20 for diametral pitch? 
+         * I am unsure if this is what we're looking for
+         */
         // TODO: We must get the proper value for this!
         encoder.setPositionConversionFactor(1);
     }

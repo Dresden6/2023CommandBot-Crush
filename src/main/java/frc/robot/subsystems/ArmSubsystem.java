@@ -12,13 +12,14 @@ public class ArmSubsystem extends SubsystemBase {
     private boolean grabMode;
 
     // TODO: Need to set the minimum and maximum allowed angles for the arm
-    private final double minAngle = 0;
-    private final double maxAngle = 30;
+    private final double minAngle = -30;
+    private final double maxAngle = 60; // Could possibly be 80? I'll just say 60 for now
 
     public void init()
     {
         // Setup motor
         // TODO: Setup correct CAN bus ID 
+        // I think this one is already correct
         armMotor = new CANSparkMax(7, MotorType.kBrushless);
 
         // Setup encoder 
