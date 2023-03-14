@@ -24,8 +24,8 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     public void init()
     {
-        controllerLeft = new CANSparkMax(8, MotorType.kBrushless);
-        controllerRight = new CANSparkMax(9, MotorType.kBrushless);
+        controllerLeft = new CANSparkMax(7, MotorType.kBrushless);
+        controllerRight = new CANSparkMax(8, MotorType.kBrushless);
         controllerRight.setInverted(true);
 
         elevatorDrive = new DifferentialDrive(controllerLeft, controllerRight);

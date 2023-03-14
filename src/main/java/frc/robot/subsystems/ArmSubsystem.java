@@ -20,7 +20,7 @@ public class ArmSubsystem extends SubsystemBase {
         // Setup motor
         // TODO: Setup correct CAN bus ID 
         // I think this one is already correct
-        armMotor = new CANSparkMax(7, MotorType.kBrushless);
+        armMotor = new CANSparkMax(9, MotorType.kBrushless);
 
         // Setup encoder 
         encoder = armMotor.getEncoder();
