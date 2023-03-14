@@ -4,22 +4,32 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ElevatorSubsystem extends SubsystemBase {
 
-    // Elevator motor controller group
-    private MotorControllerGroup motorGroup;
+    CANSparkMax controllerLeft;
+    CANSparkMax controllerRight;
+
+    // Using differential drive for this because it gives us a few goodies for free,
+    // like squaring the inputs, deadband and maximum output.
+    private DifferentialDrive elevatorDrive;
     private RelativeEncoder encoder;
     
+    private final double minHeight = 0.0;
+    private final double maxHeight = 2.0; // TODO: Must figure out allowed height in meters
 
     public void init()
     {
-        var controllerLeft = new CANSparkMax(0, MotorType.kBrushless);
-        var controllerRight = new CANSparkMax(1, MotorType.kBrushless);
-        motorGroup = new MotorControllerGroup(controllerLeft, controllerRight);
+        controllerLeft = new CANSparkMax(0, MotorType.kBrushless);
+        controllerRight = new CANSparkMax(1, MotorType.kBrushless);
+        controllerRight.setInverted(true);
+
+        elevatorDrive = new DifferentialDrive(controllerLeft, controllerRight);
+
         encoder = controllerLeft.getEncoder();
 
         // When the match starts we should assume that the elevator is either at the
@@ -29,41 +39,39 @@ public class ElevatorSubsystem extends SubsystemBase {
         // We need to set the position conversion factor which says how many meters
         // the elevator moves with one full rotation of the motor. To do this, we must
         // know the gear ratio and the diameter of the gear/wheel driving the elevator.
+        // TODO: We must get the proper value for this!
         encoder.setPositionConversionFactor(1);
     }
 
-    public boolean isAtTop(int pos)
+    public boolean isAtTop()
     {
-        // PLACEHOLDER; we can put a real value here later
-        int top = 1;
-
-        if(pos == top)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        var position = encoder.getPosition();
+        return position >= maxHeight; // TODO: Might want to add a fudge factor here for safety?
     }
 
-    public boolean isAtBottom(int pos)
+    public boolean isAtBottom()
     {
-        // PLACEHOLDER; we can put a real value here later
-        int bottom = 0;
-
-        if(pos == bottom)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        var position = encoder.getPosition();
+        return position <= minHeight; // TODO: Might want to add a fudge factor here for safety?
     }
 
-    public void move(double amt)
+    public void move(double speed)
     {
-        motorGroup.set(amt);
+        // Check if we are already at the top or bottom and stop moving if so.
+        if (speed > 0 && isAtTop())
+        {
+            speed = 0;
+        }
+        else if (speed < 0 && isAtBottom())
+        {
+            speed = 0;
+        }
+
+        elevatorDrive.arcadeDrive(speed, 0);
+    }
+
+    public void resetEncoders()
+    {
+        encoder.setPosition(0);
     }
 }

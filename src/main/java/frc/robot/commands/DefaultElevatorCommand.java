@@ -18,8 +18,7 @@ public class DefaultElevatorCommand extends CommandBase {
     @Override
     public void execute() {
         
-        double height = controller.getRightY();
-
-        elevatorSubsystem.move(height);
+        double speed = controller.getRightY();
+        elevatorSubsystem.move(speed);
     }
 }
