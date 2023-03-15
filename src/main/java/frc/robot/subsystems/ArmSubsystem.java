@@ -9,7 +9,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class ArmSubsystem extends SubsystemBase {
     private CANSparkMax armMotor;
     private RelativeEncoder encoder;
-    private boolean grabMode;
 
     // TODO: Need to set the minimum and maximum allowed angles for the arm
     private final double minAngle = -30;
@@ -18,8 +17,6 @@ public class ArmSubsystem extends SubsystemBase {
     public void init()
     {
         // Setup motor
-        // TODO: Setup correct CAN bus ID 
-        // I think this one is already correct
         armMotor = new CANSparkMax(9, MotorType.kBrushless);
 
         // Setup encoder 
