@@ -79,4 +79,14 @@ public class ElevatorSubsystem extends SubsystemBase {
     {
         encoder.setPosition(0);
     }
+
+    public double getPosition()
+    {
+        return encoder.getPosition();
+    }
+
+    public double getMaxPosition()
+    {
+        return maxHeight;
+    }
 }

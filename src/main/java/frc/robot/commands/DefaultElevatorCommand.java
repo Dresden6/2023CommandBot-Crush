@@ -20,5 +20,7 @@ public class DefaultElevatorCommand extends CommandBase {
         
         double speed = controller.getRightY();
         elevatorSubsystem.move(speed);
+
+        // TODO: Add code here to control angle of arm based on height of elevator
     }
 }
