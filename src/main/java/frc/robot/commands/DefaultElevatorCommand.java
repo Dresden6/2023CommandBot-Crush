@@ -6,8 +6,8 @@ import frc.robot.subsystems.ElevatorSubsystem;
 
 public class DefaultElevatorCommand extends CommandBase {
     
-    final XboxController controller;
-    final ElevatorSubsystem elevatorSubsystem;
+    final private XboxController controller;
+    final private ElevatorSubsystem elevatorSubsystem;
 
     public DefaultElevatorCommand(XboxController controller, ElevatorSubsystem elevatorSubsystem) {
         this.controller = controller;
@@ -18,7 +18,7 @@ public class DefaultElevatorCommand extends CommandBase {
     @Override
     public void execute() {
         
-        double speed = controller.getRightY();
+        double speed = controller.getLeftY();
         elevatorSubsystem.move(speed);
 
         // TODO: Add code here to control angle of arm based on height of elevator

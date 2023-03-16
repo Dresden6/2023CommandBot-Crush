@@ -6,8 +6,8 @@ import frc.robot.subsystems.DriveSubsystem;
 
 public class DefaultDriveCommand extends CommandBase {
     
-  final XboxController controller;
-  final DriveSubsystem driveSubsystem;
+  final private XboxController controller;
+  final private DriveSubsystem driveSubsystem;
 
   public DefaultDriveCommand(XboxController controller, DriveSubsystem driveSubsystem) {
     this.controller = controller;

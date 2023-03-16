@@ -21,7 +21,11 @@ public class ArmSubsystem extends SubsystemBase {
 
         // Setup encoder 
         encoder = armMotor.getEncoder();
-        encoder.setPositionConversionFactor(1.0 / 80.0); 
+        // Pitch diameter is 64/20 inches
+        // Gear ratio is 1:125
+        // Since we only care about radians of rotation I don't think 
+        // we need to factor the pitch diameter into the equation?
+        encoder.setPositionConversionFactor(1.0 / 125.0); 
         encoder.setPosition(0);
     }
 

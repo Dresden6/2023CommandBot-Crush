@@ -5,8 +5,17 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.commands.DefaultClawCommand;
 import frc.robot.commands.DefaultDriveCommand;
+import frc.robot.commands.DefaultElevatorCommand;
+import frc.robot.commands.DefaultIntakeCommand;
+import frc.robot.commands.SetMoveElevatorCommand;
+import frc.robot.commands.SetMoveElevatorCommand.MovePosition;
+import frc.robot.subsystems.ArmSubsystem;
+import frc.robot.subsystems.ClawSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.ElevatorSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -22,6 +31,10 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final DriveSubsystem driveSubsystem = new DriveSubsystem();
+  private final ClawSubsystem clawSubsystem = new ClawSubsystem();
+  private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
+  private final ArmSubsystem armSubsystem = new ArmSubsystem();
+  private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final XboxController controller =
@@ -33,9 +46,23 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     driveSubsystem.init();
-
     driveSubsystem.register();
     driveSubsystem.setDefaultCommand(new DefaultDriveCommand(controller, driveSubsystem));
+
+    clawSubsystem.init();
+    clawSubsystem.register();
+    clawSubsystem.setDefaultCommand(new DefaultClawCommand(armController, clawSubsystem));
+
+    elevatorSubsystem.init();
+    elevatorSubsystem.register();
+    elevatorSubsystem.setDefaultCommand(new DefaultElevatorCommand(armController, elevatorSubsystem));
+
+    armSubsystem.init();
+    armSubsystem.register();
+
+    intakeSubsystem.init();
+    intakeSubsystem.register();
+    intakeSubsystem.setDefaultCommand(new DefaultIntakeCommand(armController, intakeSubsystem));
 
     // Configure the trigger bindings
     configureBindings();
@@ -51,7 +78,14 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
+    // Bindings for the arm controller
+    var armCommandController = new CommandXboxController(1);
+    armCommandController.a().onTrue(new SetMoveElevatorCommand(controller, elevatorSubsystem, MovePosition.Top));
+    armCommandController.b().onTrue(new SetMoveElevatorCommand(controller, elevatorSubsystem, MovePosition.Middle));
+    armCommandController.x().onTrue(new SetMoveElevatorCommand(controller, elevatorSubsystem, MovePosition.Bottom));
 
+    // Bindings for the driver controller 
+    
   }
 
   /**

@@ -3,14 +3,10 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class ClawSubsystem extends SubsystemBase{
-    private CANSparkMax clawMotorLeft;
-    private CANSparkMax ClawMotorRight;
-    
-    private DifferentialDrive clawDrive;
+public class ClawSubsystem extends SubsystemBase {
+    private CANSparkMax gripMotor;
     private RelativeEncoder encoder;
 
     // placeholders for now
@@ -22,14 +18,11 @@ public class ClawSubsystem extends SubsystemBase{
     public void init()
     {
         // Setup motor
-        clawMotorLeft = new CANSparkMax(10, MotorType.kBrushless);
-        ClawMotorRight = new CANSparkMax(11, MotorType.kBrushless);
-        ClawMotorRight.setInverted(true);
+        gripMotor = new CANSparkMax(11, MotorType.kBrushless);
 
         // Setup encoder
-        encoder = clawMotorLeft.getEncoder();
-        // TODO: get the conversion factor for this, i assume there is one
-        //encoder.setPositionConversionFactor();
+        encoder = gripMotor.getEncoder();
+        encoder.setPositionConversionFactor(1.0/25.0);
         encoder.setPosition(0);
     }
 
@@ -63,7 +56,7 @@ public class ClawSubsystem extends SubsystemBase{
             speed = 0; 
         }
 
-        clawDrive.arcadeDrive(speed, 0);
+        gripMotor.set(speed);
     }
 
     public void resetEncoders()

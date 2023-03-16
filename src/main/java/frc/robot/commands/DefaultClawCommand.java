@@ -13,7 +13,7 @@ public class DefaultClawCommand extends CommandBase {
         this.controller = controller;
         this.clawSubsystem = clawSubsystem;
         this.addRequirements(clawSubsystem);
-        }
+    }
 
     @Override
     public void execute() {
@@ -23,7 +23,7 @@ public class DefaultClawCommand extends CommandBase {
          * we can maybe somehow set it to go up with one trigger 
          * and down with the other?
          */
-        double speed = controller.getLeftTriggerAxis();
+        double speed = controller.getRightY();
         clawSubsystem.move(speed);
     }
 }
