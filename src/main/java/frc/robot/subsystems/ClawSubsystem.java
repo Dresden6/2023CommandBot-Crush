@@ -3,6 +3,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ClawSubsystem extends SubsystemBase {
@@ -10,9 +11,9 @@ public class ClawSubsystem extends SubsystemBase {
     private RelativeEncoder encoder;
 
     // placeholders for now
-    // TODO: get the real values of these !!
-    private final double minAngle = 0;
-    private final double maxAngle = 1;
+    // TODO: get the real values of these !!(originally 0 and 1)
+    private final double minAngle = -0.1;
+    private final double maxAngle = 0.6;
 
 
     public void init()
@@ -24,6 +25,13 @@ public class ClawSubsystem extends SubsystemBase {
         encoder = gripMotor.getEncoder();
         encoder.setPositionConversionFactor(1.0/25.0);
         encoder.setPosition(0);
+    }
+    
+    @Override 
+    public void periodic()
+    {
+        // Log dashboard values
+        SmartDashboard.putNumber("Claw Position", encoder.getPosition());
     }
 
     public double getDegrees()

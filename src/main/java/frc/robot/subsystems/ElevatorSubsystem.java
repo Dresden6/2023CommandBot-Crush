@@ -5,6 +5,7 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ElevatorSubsystem extends SubsystemBase {
@@ -18,13 +19,16 @@ public class ElevatorSubsystem extends SubsystemBase {
     private RelativeEncoder encoder;
     
     private final double minHeight = 0.0;
-    private final double maxHeight = 1.143; // This is the highest it can possibly go, about 45 inches. We might want to change this to a smaller value for safety's sake?
+    private final double maxHeight = -2; // This is the highest it can possibly go, about 45 inches. We might want to change this to a smaller value for safety's sake?
 
     public void init()
     {
         controllerLeft = new CANSparkMax(7, MotorType.kBrushless);
         controllerRight = new CANSparkMax(8, MotorType.kBrushless);
-        controllerRight.setInverted(true);
+        //controllerRight.setInverted(true);
+        controllerRight.follow(controllerLeft,true);
+
+        //controllerRight.follow(controllerLeft);
 
         elevatorDrive = new DifferentialDrive(controllerLeft, controllerRight);
 
@@ -42,29 +46,38 @@ public class ElevatorSubsystem extends SubsystemBase {
          * gear diameter: 22 teeth / 20 for diametral pitch? 
          * I am unsure if this is what we're looking for
          */
-        encoder.setPositionConversionFactor((0.02794 * Math.PI) / 27.0);
+        encoder.setPositionConversionFactor((1 * Math.PI) / 27.0);
+    }
+    
+    @Override 
+    public void periodic()
+    {
+        // Log dashboard values
+        SmartDashboard.putNumber("Elevator Position", encoder.getPosition());
     }
 
     public boolean isAtTop()
     {
         var position = encoder.getPosition();
-        return position >= maxHeight; // TODO: Might want to add a fudge factor here for safety?
+        return position <= maxHeight; // TODO: Might want to add a fudge factor here for safety?
+        
+        //SmartDashboard.putData("elevator", elevatorDrive);
     }
 
     public boolean isAtBottom()
     {
         var position = encoder.getPosition();
-        return position <= minHeight; // TODO: Might want to add a fudge factor here for safety?
+        return position >= minHeight; // TODO: Might want to add a fudge factor here for safety?
     }
 
     public void move(double speed)
     {
         // Check if we are already at the top or bottom and stop moving if so.
-        if (speed > 0 && isAtTop())
+        if (speed < 0 && isAtTop())
         {
             speed = 0;
         }
-        else if (speed < 0 && isAtBottom())
+        else if (speed > 0 && isAtBottom())
         {
             speed = 0;
         }

@@ -10,16 +10,23 @@ import frc.robot.commands.DefaultDriveCommand;
 import frc.robot.commands.DefaultElevatorCommand;
 import frc.robot.commands.DefaultIntakeCommand;
 import frc.robot.commands.SetMoveElevatorCommand;
+import frc.robot.commands.SetMoveClawCommand;
 import frc.robot.commands.SetMoveElevatorCommand.MovePosition;
+import frc.robot.commands.auto.Autos;
 import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.ClawSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
@@ -36,12 +43,16 @@ public class RobotContainer {
   private final ArmSubsystem armSubsystem = new ArmSubsystem();
   private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 
+  
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final XboxController controller =
       new XboxController(OperatorConstants.kDriverControllerPort);
 
   private final XboxController armController = 
     new XboxController(OperatorConstants.kArmControllerPort);
+
+
+  private final SendableChooser<String> m_chooser;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -64,6 +75,11 @@ public class RobotContainer {
     intakeSubsystem.register();
     intakeSubsystem.setDefaultCommand(new DefaultIntakeCommand(armController, intakeSubsystem));
 
+    m_chooser = new SendableChooser<>();
+    m_chooser.addOption("Simple Auto", "Simple Auto");
+    SmartDashboard.putData("Auto Choices", m_chooser);
+    
+
     // Configure the trigger bindings
     configureBindings();
   }
@@ -79,11 +95,23 @@ public class RobotContainer {
    */
   private void configureBindings() {
     // Bindings for the arm controller
-    var armCommandController = new CommandXboxController(1);
-    armCommandController.a().onTrue(new SetMoveElevatorCommand(controller, elevatorSubsystem, MovePosition.Top));
-    armCommandController.b().onTrue(new SetMoveElevatorCommand(controller, elevatorSubsystem, MovePosition.Middle));
-    armCommandController.x().onTrue(new SetMoveElevatorCommand(controller, elevatorSubsystem, MovePosition.Bottom));
-
+    CommandXboxController armCommandController = new CommandXboxController(1);
+    
+     
+    /**armCommandController.a().onTrue(new SetMoveElevatorCommand(armController, elevatorSubsystem, MovePosition.Top));
+    armCommandController.b().onTrue(new SetMoveElevatorCommand(armController, elevatorSubsystem, MovePosition.Middle));
+    armCommandController.x().onTrue(new SetMoveElevatorCommand(armController, elevatorSubsystem, MovePosition.Bottom));
+    /* */
+    //armCommandController.leftStick().whileTrue(new SetMoveElevatorCommand(armController, elevatorSubsystem, MovePosition.Top));
+/* 
+    armCommandController.a().whileTrue(new StartEndCommand(() -> elevatorSubsystem.move(5), () -> elevatorSubsystem.move(0.1), elevatorSubsystem));
+    armCommandController.b().whileTrue(new StartEndCommand(() -> elevatorSubsystem.move(-3), () -> elevatorSubsystem.move(-0.1), elevatorSubsystem));
+    
+    armCommandController.y().whileTrue(new InstantCommand(() -> armSubsystem.swing(0.2), armSubsystem));
+    */
+    //Bindings for the intake controller
+    
+    //armCommandController.rightBumper().onTrue(new SetMoveClawCommand(armController, intakeSubsystem, ));
     // Bindings for the driver controller 
     
   }
@@ -95,6 +123,7 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return new InstantCommand();
+    return new InstantCommand(() -> clawSubsystem.move(-0.1));
+
   }
 }

@@ -28,7 +28,7 @@ import frc.robot.Robot;
 import frc.robot.Constants.DriveConstants;
 
 public class DriveSubsystem extends SubsystemBase {
-    double WHEEL_DIAMETER = Units.inchesToMeters(5); // 4 inches
+    double WHEEL_DIAMETER = Units.inchesToMeters(5); 
     double WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER * Math.PI;
     double WHEEL_GEAR_RATIO = .75;
 
@@ -54,7 +54,7 @@ public class DriveSubsystem extends SubsystemBase {
     EncoderSim rightEncoderSim;
 
     // Limiter used to limit how fast velocity is allowed to change
-    final SlewRateLimiter limiter = new SlewRateLimiter(0.5);
+    //final SlewRateLimiter limiter = new SlewRateLimiter(0.5);
 
 
     public void init() {
@@ -127,6 +127,11 @@ public class DriveSubsystem extends SubsystemBase {
         odometry.update(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition());
         field.setRobotPose(odometry.getPoseMeters());
 
+        
+        // Log dashboard values
+        SmartDashboard.putNumber("Drive Left Position", leftEncoder.getPosition());
+        SmartDashboard.putNumber("Drive Right Position", rightEncoder.getPosition());
+
         // TANK DRIVE CODE 
         /*
          * motorFrontLeft.set(ControlMode.PercentOutput, leftY);
@@ -187,7 +192,7 @@ public class DriveSubsystem extends SubsystemBase {
     
     public void arcadeDrive(double fwd, double rot)
     {
-        diffDrive.arcadeDrive(limiter.calculate(fwd), rot);
+        diffDrive.arcadeDrive(fwd, rot);
     }
 
     public void tankDriveVolts(double left, double right)
