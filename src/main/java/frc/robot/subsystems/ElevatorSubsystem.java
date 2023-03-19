@@ -28,7 +28,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     private double lastTime = Timer.getFPGATimestamp(); 
     
     private final double minHeight = 0.0;
-    private final double maxHeight = 1.143; // This is the highest it can possibly go, about 45 inches. We might want to change this to a smaller value for safety's sake?
+    private final double maxHeight = -2; // This is the highest it can possibly go, about 45 inches. We might want to change this to a smaller value for safety's sake?
 
     // ElevatorFeedforward feedforward = new ElevatorFeedforward(elevatorKS, elevatorKG, elevatorKV);
 
@@ -61,15 +61,16 @@ public class ElevatorSubsystem extends SubsystemBase {
          * gear diameter: 22 teeth / 20 for diametral pitch? 
          * I am unsure if this is what we're looking for
          */
-        encoder.setPositionConversionFactor((0.02794 * Math.PI) / 27.0);
+        encoder.setPositionConversionFactor((1 * Math.PI) / 27.0);
+    }
+    
+    @Override 
+    public void periodic()
+    {
+        // Log dashboard values
+        SmartDashboard.putNumber("Elevator Position", encoder.getPosition());
     }
 
-    @Override
-    public void periodic() {
-      // This method will be called once per scheduler run
-
-      SmartDashboard.putNumber("Elevator Position", getPosition());
-    }
 
   
     /**
@@ -123,13 +124,15 @@ public class ElevatorSubsystem extends SubsystemBase {
     public boolean isAtTop()
     {
         var position = encoder.getPosition();
-        return position >= maxHeight; // TODO: Might want to add a fudge factor here for safety?
+        return position <= maxHeight; // TODO: Might want to add a fudge factor here for safety?
+        
+        //SmartDashboard.putData("elevator", elevatorDrive);
     }
 
     public boolean isAtBottom()
     {
         var position = encoder.getPosition();
-        return position <= minHeight; // TODO: Might want to add a fudge factor here for safety?
+        return position >= minHeight; // TODO: Might want to add a fudge factor here for safety?
     }
 
     public void resetEncoders()

@@ -17,8 +17,8 @@ public class ArmSubsystem extends SubsystemBase {
     private PIDController pidController;
 
     // TODO: Need to set the minimum and maximum allowed angles for the arm
-    private final double minAngle = -30;
-    private final double maxAngle = 60; // Could possibly be 80? I'll just say 60 for now
+    private final double minAngle = 0;
+    private final double maxAngle = 70; // Could possibly be 80? I'll just say 60 for now
 
     public void init() {
         // Setup motor
@@ -26,7 +26,7 @@ public class ArmSubsystem extends SubsystemBase {
 
         // Setup encoder
         encoder = armMotor.getEncoder();
-        // Pitch diameter is 64/20 inches
+        // Pitch diameter is 64/16 inches
         // Gear ratio is 1:125
         // Since we only care about radians of rotation I don't think
         // we need to factor the pitch diameter into the equation?
@@ -36,13 +36,6 @@ public class ArmSubsystem extends SubsystemBase {
         pidController = new PIDController(armKP, armKI, armKD);
         pidController.setTolerance(armPIDTolerance);
 
-    }
-
-    @Override
-    public void periodic() {
-        // This method will be called once per scheduler run
-
-        SmartDashboard.putNumber("Arm Position", getPosition());
     }
 
     public void setArmPosition(double position) {
@@ -70,6 +63,13 @@ public class ArmSubsystem extends SubsystemBase {
         return encoder.getPosition();
     }
 
+    @Override 
+    public void periodic()
+    {
+        // Log dashboard values
+        SmartDashboard.putNumber("Arm Position", encoder.getPosition());
+    }
+
     /*
      * Return degrees arm is currently at.
      */
@@ -79,17 +79,17 @@ public class ArmSubsystem extends SubsystemBase {
         return encoder.getPosition() * 360;
     }
 
-    public void resetEncoder() {
-        encoder.setPosition(0);
-    }
+    public void swing(double speed)
+    {
 
-    public void swing(double speed) {
-        if (speed < 0 && getDegrees() <= minAngle) {
+        armMotor.set(speed);
+        if (speed < 0 && getDegrees() <= minAngle)
+        {
             speed = 0;
         } else if (speed > 0 && getDegrees() >= maxAngle) {
             speed = 0;
         }
 
-        armMotor.set(speed);
+        
     }
 }

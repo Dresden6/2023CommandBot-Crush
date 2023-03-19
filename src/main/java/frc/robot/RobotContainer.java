@@ -25,6 +25,8 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -54,12 +56,16 @@ public class RobotContainer {
 
   private boolean isIntakeConfigCube = false; // True for cone, false for cube
 
+  
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final XboxController controller =
       new XboxController(OperatorConstants.kDriverControllerPort);
 
   private final XboxController armController = 
     new XboxController(OperatorConstants.kArmControllerPort);
+
+
+  private final SendableChooser<String> m_chooser;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -94,6 +100,11 @@ public class RobotContainer {
     .withWidget(BuiltInWidgets.kNumberSlider)
     .withProperties(Map.of("`min", 0, "max", 12, "Block increment", 0.05)).getEntry();
 
+
+    m_chooser = new SendableChooser<>();
+    m_chooser.addOption("Simple Auto", "Simple Auto");
+    SmartDashboard.putData("Auto Choices", m_chooser);
+    
 
     // Configure the trigger bindings
     configureBindings();
