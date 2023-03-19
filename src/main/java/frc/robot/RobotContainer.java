@@ -65,7 +65,7 @@ public class RobotContainer {
     new XboxController(OperatorConstants.kArmControllerPort);
 
 
-  private final SendableChooser<String> m_chooser;
+  private final SendableChooser<Command> m_chooser;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -102,7 +102,11 @@ public class RobotContainer {
 
 
     m_chooser = new SendableChooser<>();
-    m_chooser.addOption("Simple Auto", "Simple Auto");
+    m_chooser.addOption("Place Cone", new ParallelCommandGroup(
+      new SuperStructureToPos(() -> SuperStructureSetpoints.elevatorScoreConeHigh, () -> SuperStructureSetpoints.armScoreConeHigh, elevatorSubsystem, armSubsystem), // Move superstructure
+      new ClawIntake(() -> elevatorSubsystem.isAtGoal() && true ? ClawConstants.outtakeSpeed : 0, () -> true, clawSubsystem) // Outtake the cone when the setpoints are reached
+    ));
+
     SmartDashboard.putData("Auto Choices", m_chooser);
     
 
@@ -167,9 +171,12 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return new ParallelCommandGroup(
-      new SuperStructureToPos(() -> SuperStructureSetpoints.elevatorScoreConeHigh, () -> SuperStructureSetpoints.armScoreConeHigh, elevatorSubsystem, armSubsystem), // Move superstructure
-      new ClawIntake(() -> elevatorSubsystem.isAtGoal() && true ? ClawConstants.outtakeSpeed : 0, () -> true, clawSubsystem) // Outtake the cone when the setpoints are reached
-    );
+    return m_chooser.getSelected();
+  }
+
+  public void resetAllEncoders() {
+    elevatorSubsystem.resetEncoder();
+    armSubsystem.resetEncoder();
+    clawSubsystem.resetEncoder();
   }
 }

@@ -84,8 +84,10 @@ public class ClawSubsystem extends SubsystemBase {
         gripMotor.set(speed);
     }
 
-    public void resetEncoders()
-    {
-        encoder.setPosition(0);
+    public void resetEncoder(double position) {
+        encoder.setPosition(position);
+    }
+    public void resetEncoder() {
+        resetEncoder(0);
     }
 }

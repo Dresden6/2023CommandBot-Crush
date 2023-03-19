@@ -135,9 +135,11 @@ public class ElevatorSubsystem extends SubsystemBase {
         return position >= minHeight; // TODO: Might want to add a fudge factor here for safety?
     }
 
-    public void resetEncoders()
-    {
-        encoder.setPosition(0);
+    public void resetEncoder(double position) {
+        encoder.setPosition(position);
+    }
+    public void resetEncoder() {
+        resetEncoder(0);
     }
 
     public double getPosition()

@@ -38,8 +38,12 @@ public class ArmSubsystem extends SubsystemBase {
 
     }
 
+    /**
+     * Set the arm to a specific position. Must be called periodically
+     * @param position in degrees
+     */
     public void setArmPosition(double position) {
-        double pidCalc = pidController.calculate(getPosition(), position);
+        double pidCalc = pidController.calculate(getPosition(), position / 360); // Convert to rotations
         setArmVolts(pidCalc + armKF); // Arbitrary FeedForward. I think this is what 1339 is doing for our wrist, but
                                       // it might cause some weird behavior because KF is calculated at the point
                                       // where the motor has to work the hardest, when the wrist is straight up it
@@ -89,7 +93,14 @@ public class ArmSubsystem extends SubsystemBase {
         } else if (speed > 0 && getDegrees() >= maxAngle) {
             speed = 0;
         }
-
-        
     }
+
+    public void resetEncoder(double position) {
+        encoder.setPosition(position);
+    }
+    public void resetEncoder() {
+        resetEncoder(0);
+    }
+
+
 }
