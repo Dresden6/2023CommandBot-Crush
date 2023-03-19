@@ -4,22 +4,35 @@
 
 package frc.robot;
 
+import frc.robot.Constants.ClawConstants;
+import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.DefaultClawCommand;
+import frc.robot.Constants.SuperStructureSetpoints;
 import frc.robot.commands.DefaultDriveCommand;
-import frc.robot.commands.DefaultElevatorCommand;
-import frc.robot.commands.DefaultIntakeCommand;
-import frc.robot.commands.SetMoveElevatorCommand;
-import frc.robot.commands.SetMoveElevatorCommand.MovePosition;
+import frc.robot.commands.superStructure.ArmToPos;
+import frc.robot.commands.superStructure.ClawIntake;
+import frc.robot.commands.superStructure.ElevatorToPos;
+import frc.robot.commands.superStructure.SuperStructureToPos;
 import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.ClawSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
-import frc.robot.subsystems.IntakeSubsystem;
+
+import java.util.Map;
+
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
@@ -34,7 +47,12 @@ public class RobotContainer {
   private final ClawSubsystem clawSubsystem = new ClawSubsystem();
   private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
   private final ArmSubsystem armSubsystem = new ArmSubsystem();
-  private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+
+
+  private GenericEntry elevatorOutputVolts;
+  private GenericEntry armOutputVolts;
+
+  private boolean isIntakeConfigCube = false; // True for cone, false for cube
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final XboxController controller =
@@ -51,22 +69,48 @@ public class RobotContainer {
 
     clawSubsystem.init();
     clawSubsystem.register();
-    clawSubsystem.setDefaultCommand(new DefaultClawCommand(armController, clawSubsystem));
+    // clawSubsystem.setDefaultCommand(new DefaultClawCommand(armController, clawSubsystem));
 
     elevatorSubsystem.init();
     elevatorSubsystem.register();
-    elevatorSubsystem.setDefaultCommand(new DefaultElevatorCommand(armController, elevatorSubsystem));
+    elevatorSubsystem.setDefaultCommand(new ElevatorToPos(() -> SuperStructureSetpoints.elevatorHomePos, elevatorSubsystem));
 
     armSubsystem.init();
     armSubsystem.register();
+    armSubsystem.setDefaultCommand(new ArmToPos(() -> SuperStructureSetpoints.armHomeRot, armSubsystem));
+    
+    ShuffleboardTab poseFinder = Shuffleboard.getTab("poseFinder");
 
-    intakeSubsystem.init();
-    intakeSubsystem.register();
-    intakeSubsystem.setDefaultCommand(new DefaultIntakeCommand(armController, intakeSubsystem));
+
+    // Comment out both of these poseFinder things when you're done tuning
+    // TODO Use this to tune KG for the elevator
+    elevatorOutputVolts = poseFinder.add("Elevator Volts", 0)
+    .withWidget(BuiltInWidgets.kNumberSlider)
+    .withProperties(Map.of("`min", 0, "max", 12, "Block increment", 0.05)).getEntry();
+
+
+    // TODO Use this to tune KG for the arm
+    armOutputVolts = poseFinder.add("Arm Volts", 0)
+    .withWidget(BuiltInWidgets.kNumberSlider)
+    .withProperties(Map.of("`min", 0, "max", 12, "Block increment", 0.05)).getEntry();
+
 
     // Configure the trigger bindings
     configureBindings();
   }
+
+
+  private Trigger armControllerA = new JoystickButton(armController, XboxController.Button.kA.value);
+  private Trigger armControllerB = new JoystickButton(armController, XboxController.Button.kB.value);
+  private Trigger armControllerX = new JoystickButton(armController, XboxController.Button.kX.value);
+  private Trigger armControllerY = new JoystickButton(armController, XboxController.Button.kY.value);
+  
+  private Trigger armControllerLeftBumper = new JoystickButton(armController, XboxController.Button.kLeftBumper.value);
+  private Trigger armControllerRightBumper = new JoystickButton(armController, XboxController.Button.kRightBumper.value);
+
+  private Trigger armControllerLeftTrigger = new Trigger(() -> armController.getLeftTriggerAxis() > 0.1);
+  private Trigger armControllerRightTrigger = new Trigger(() -> armController.getRightTriggerAxis() > 0.1);
+
 
   /**
    * Use this method to define your trigger->command mappings. Triggers can be created via the
@@ -79,10 +123,27 @@ public class RobotContainer {
    */
   private void configureBindings() {
     // Bindings for the arm controller
-    var armCommandController = new CommandXboxController(1);
-    armCommandController.a().onTrue(new SetMoveElevatorCommand(controller, elevatorSubsystem, MovePosition.Top));
-    armCommandController.b().onTrue(new SetMoveElevatorCommand(controller, elevatorSubsystem, MovePosition.Middle));
-    armCommandController.x().onTrue(new SetMoveElevatorCommand(controller, elevatorSubsystem, MovePosition.Bottom));
+
+  
+    // TODO Use this code to tune elevator and arm. You need to comment out the other code that uses the A and B buttons.
+    // armControllerA.whileTrue(new RunCommand(() -> elevatorSubsystem.setElevatorVolts(elevatorOutputVolts.getDouble(0)))).onFalse(new InstantCommand(() -> elevatorSubsystem.disable()));
+    // armControllerB.whileTrue(new RunCommand(() -> armSubsystem.setArmVolts(armOutputVolts.getDouble(0)))).onFalse(new InstantCommand(() -> armSubsystem.disable()));
+
+
+    armControllerLeftTrigger.whileTrue(new StartEndCommand(() -> isIntakeConfigCube = true, () -> isIntakeConfigCube = false));
+    
+
+    armControllerX.whileTrue(new SuperStructureToPos(() -> SuperStructureSetpoints.elevatorIntakeGroundPos, () -> SuperStructureSetpoints.armIntakeGroundRot, elevatorSubsystem, armSubsystem));
+    armControllerY.whileTrue(new SuperStructureToPos(
+      () -> isIntakeConfigCube ? SuperStructureSetpoints.elevatorScoreConeHigh : SuperStructureSetpoints.elevatorScoreConeHigh, 
+      () -> SuperStructureSetpoints.armScoreConeHigh,
+       elevatorSubsystem, armSubsystem));
+    armControllerB.whileTrue(new SuperStructureToPos(() -> SuperStructureSetpoints.elevatorScoreConeMid, () -> SuperStructureSetpoints.armScoreConeMid, elevatorSubsystem, armSubsystem));
+
+    
+    armControllerLeftBumper.whileTrue(new ClawIntake(() -> ClawConstants.intakeSpeed, () -> true, clawSubsystem));
+    armControllerLeftBumper.whileTrue(new ClawIntake(() -> ClawConstants.outtakeSpeed, () -> true, clawSubsystem));
+
 
     // Bindings for the driver controller 
     
@@ -95,6 +156,9 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return new InstantCommand();
+    return new ParallelCommandGroup(
+      new SuperStructureToPos(() -> SuperStructureSetpoints.elevatorScoreConeHigh, () -> SuperStructureSetpoints.armScoreConeHigh, elevatorSubsystem, armSubsystem), // Move superstructure
+      new ClawIntake(() -> elevatorSubsystem.isAtGoal() && true ? ClawConstants.outtakeSpeed : 0, () -> true, clawSubsystem) // Outtake the cone when the setpoints are reached
+    );
   }
 }

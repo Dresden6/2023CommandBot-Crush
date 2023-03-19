@@ -4,9 +4,11 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import static frc.robot.Constants.ClawConstants.*;
 
 public class ClawSubsystem extends SubsystemBase {
     private CANSparkMax gripMotor;
+    private CANSparkMax intakeMotor;
     private RelativeEncoder encoder;
 
     // placeholders for now
@@ -18,7 +20,8 @@ public class ClawSubsystem extends SubsystemBase {
     public void init()
     {
         // Setup motor
-        gripMotor = new CANSparkMax(11, MotorType.kBrushless);
+        gripMotor = new CANSparkMax(gripMotorPort, MotorType.kBrushless);
+        intakeMotor = new CANSparkMax(intakeMotorPort, MotorType.kBrushless);
 
         // Setup encoder
         encoder = gripMotor.getEncoder();
@@ -33,6 +36,20 @@ public class ClawSubsystem extends SubsystemBase {
         return encoder.getPosition() * 360;
     }
 
+    /**
+     * Run at percent [-1, 1]
+     * @param speed
+     */
+    public void runIntake(double speed)
+    {
+        intakeMotor.set(speed);
+    }
+
+    public void disable() {
+        gripMotor.set(0);
+        intakeMotor.set(0);
+    }
+
     public boolean isOpen()
     {
         var degrees = getDegrees();
@@ -45,7 +62,7 @@ public class ClawSubsystem extends SubsystemBase {
         return degrees <= minAngle;
     }
 
-    public void move(double speed)
+    public void moveClaw(double speed)
     {
         if (speed > 0 && isOpen())
         {
