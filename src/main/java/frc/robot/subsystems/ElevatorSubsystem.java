@@ -80,10 +80,9 @@ public class ElevatorSubsystem extends SubsystemBase {
     public void setPosition(double positionGoal) {
         
         double pidVal = elevatorPIDController.calculate(getPosition(), positionGoal);
-        double acceleration = (elevatorPIDController.getSetpoint().velocity - lastSpeed) / (Timer.getFPGATimestamp() - lastTime);
+        pidVal = Math.max(12, Math.min(-12, pidVal));
 
         double motorVoltsOutput = pidVal + elevatorKF; // Arbitrary FeedForward
-
 
         // TODO Check signs on these
         // Motor safety. Might want to add limit switches at some point.
@@ -95,12 +94,8 @@ public class ElevatorSubsystem extends SubsystemBase {
 
             motorVoltsOutput = 0;
         } else {
-
             setElevatorVolts(motorVoltsOutput);
         }
-
-        lastSpeed = elevatorPIDController.getSetpoint().velocity;
-        lastTime = Timer.getFPGATimestamp();
     }
 
 

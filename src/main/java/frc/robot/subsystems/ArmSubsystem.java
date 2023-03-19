@@ -9,7 +9,7 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import static frc.robot.Constants.ArmConstants.*;
+import static frc.robot.Constants.ArmConstants.*; 
 
 public class ArmSubsystem extends SubsystemBase {
     private CANSparkMax armMotor;
@@ -44,6 +44,8 @@ public class ArmSubsystem extends SubsystemBase {
      */
     public void setArmPosition(double position) {
         double pidCalc = pidController.calculate(getPosition(), position / 360); // Convert to rotations
+        pidCalc = Math.max(12, Math.min(-12, pidCalc)); // Limit the voltage to 12V
+
         setArmVolts(pidCalc + armKF); // Arbitrary FeedForward. I think this is what 1339 is doing for our wrist, but
                                       // it might cause some weird behavior because KF is calculated at the point
                                       // where the motor has to work the hardest, when the wrist is straight up it
